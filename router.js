@@ -11,8 +11,9 @@ router.get('/askQuestion',checkAuth ,handlers.askQuestion)
 router.get("/log-out", handlers.logout)
 router.get("/getCookies", handlers.getCookies)
 router.post('/addPost',handlers.addPost)
-router.post('/addComment',handlers.addComment)
 router.get('/viewComments',handlers.viewComments)
+router.post('/addComment',handlers.addComment)
+
 router.use((req, res) => {
     res.status(404).send(`<h1>Not found</h1>`)
   })

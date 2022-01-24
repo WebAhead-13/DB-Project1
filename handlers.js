@@ -10,16 +10,16 @@ function home(req, res) {
   
   const user = req.user;
   if(user) {
-    db.query("SELECT users.username , question_posts.text_title, question_posts.text_content, question_posts.anonymous_flag FROM users INNER JOIN question_posts ON users.id = question_posts.user_id;")
+    db.query("SELECT users.username , question_posts.id, question_posts.text_title, question_posts.text_content, question_posts.anonymous_flag FROM users INNER JOIN question_posts ON users.id = question_posts.user_id;")
     .then((result) =>{
         const data = result.rows;
         // console.log(data)
         const userList = data.map((question) => {
            if(question.anonymous_flag == 1)
            {
-             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a class="btn"> add a comment</a> </li>`;
+             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
            }
-           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a class="btn"> add a comment</a> </li>`;
+           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
        
         })
 
@@ -70,16 +70,16 @@ function home(req, res) {
     });
   }
   else {
-    db.query("SELECT users.username , question_posts.text_title, question_posts.text_content, question_posts.anonymous_flag FROM users INNER JOIN question_posts ON users.id = question_posts.user_id;")
+    db.query("SELECT users.username, question_posts.id , question_posts.text_title, question_posts.text_content, question_posts.anonymous_flag FROM users INNER JOIN question_posts ON users.id = question_posts.user_id;")
     .then((result) =>{
         const data = result.rows;
         // console.log(data)
         const userList = data.map((question) => {
            if(question.anonymous_flag == 1)
            {
-             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a class="btn"> add a comment</a> </li>`;
+             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
            }
-           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a class="btn"> add a comment</a> </li>`;
+           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
        
         })
         res.status(200).send( `<!DOCTYPE html>
@@ -163,20 +163,25 @@ function logout(req,res){
 }
 
 function getCookies(req,res){
-console.log(req.user)
+// console.log(req.user)
 res.send({loggedIn:!!req.user , email:req.user});
 }
 
-function addComment(req,res){
-  db.query("INSERT INTO post_answers (id , text_content, post_id , user_id) VALUES ();")
+async function addComment(req,res){
+  const textContent= req.body.comment;
+  const postId=req.body.postId;
+  const userEmail=req.body.userEmail;
+  const user = await getUser(userEmail);
+  const userId= user.rows[0].id;
+  db.query("INSERT INTO post_answers (text_content, post_id , user_id) VALUES ($1,$2,$3)",[textContent,postId,userId])
   res.redirect("/");
 
 }
 function viewComments(req,res){
-db.query("SELECT * FROM post_answers;")
-.then(res=>{
-  console.log(res.rows)
-  res.send(res.rows);
+db.query("SELECT * , users.username FROM post_answers INNER JOIN users ON users.id = post_answers.user_id ")
+.then(({rows})=>{
+  // console.log(rows)
+  res.send(rows)
 })
 .catch(error=>{
   res.send(error);
@@ -186,6 +191,8 @@ db.query("SELECT * FROM post_answers;")
 function getUser(email) {
   return  db.query(`SELECT id,username FROM users WHERE email='${email}'`)
 }
+
+
 async function addPost(req,res){
   const data= req.body;
   let anonymous_flag=0;
@@ -194,13 +201,12 @@ async function addPost(req,res){
   // console.log(data);
   const userEmail=req.user.email;
   const user = await getUser(userEmail)
-  console.log("from add post cookies " +user.rows[0].username)
+  // console.log("from add post cookies " +user.rows[0].username)
   db.query("INSERT INTO question_posts (user_id, text_title, text_content, anonymous_flag) VALUES($1,$2,$3,$4)", [user.rows[0].id,data.title, data.content,anonymous_flag])
   .then((result)=>
   {
     res.redirect("/")
   })
-
 
 }
 
