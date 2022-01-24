@@ -1,13 +1,79 @@
 
 const db = require("./database/connection");
 const fs = require('fs')
+const jwt = require("jsonwebtoken");
+const { query } = require("express");
+const SECRET = "nkA$SD89&&282hd";
 // const homePage = require("./public/home");
 
-function home(re, res) {
+function home(req, res) {
+  
+  const user = req.user;
+  if(user) {
     db.query("SELECT users.username , question_posts.text_title, question_posts.text_content, question_posts.anonymous_flag FROM users INNER JOIN question_posts ON users.id = question_posts.user_id;")
     .then((result) =>{
         const data = result.rows;
-        console.log(data)
+        // console.log(data)
+        const userList = data.map((question) => {
+           if(question.anonymous_flag == 1)
+           {
+             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a class="btn"> add a comment</a> </li>`;
+           }
+           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a class="btn"> add a comment</a> </li>`;
+       
+        })
+
+        res.status(200).send( `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Document</title>
+                <link rel="stylesheet" href="home.css">
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;600;700&display=swap" rel="stylesheet">
+                <script src="https://use.fontawesome.com/3e91bde4aa.js"></script>
+
+            </head>
+            <body>
+          
+            <nav>
+            <div class="logo">
+            <div class="text-box">
+              <h1> Q & A</h1>
+              <h1> Q & A</h1>
+            </div>
+           </div>
+
+              <div class="nav-links">        
+                <ul>
+                  <li class="link"> <a  href="/">HOME</a></li>
+                  <li class="link"> <a href="/log-out">LOG OUT </a></li>
+                  <li class="link"> <a href="">ABOUT US</a></li>
+                  <li> <a class="btnQues" href="/askQuestion">ADD QUESTION</a></li>
+                </ul>
+               </div>
+            </nav>
+           
+            <div class="row">
+                <ul>${userList.join("")}</ul>
+            </div>
+       
+            <script src="./home.js" ></script> 
+            </body>
+            
+            </html>`);
+      
+      
+            //res.sendFile('public/home.html', {root: __dirname })
+      
+    });
+  }
+  else {
+    db.query("SELECT users.username , question_posts.text_title, question_posts.text_content, question_posts.anonymous_flag FROM users INNER JOIN question_posts ON users.id = question_posts.user_id;")
+    .then((result) =>{
+        const data = result.rows;
+        // console.log(data)
         const userList = data.map((question) => {
            if(question.anonymous_flag == 1)
            {
@@ -29,7 +95,6 @@ function home(re, res) {
 
             </head>
             <body>
-
           
             <nav>
             <div class="logo">
@@ -39,35 +104,104 @@ function home(re, res) {
             </div>
            </div>
 
-    
               <div class="nav-links">        
                 <ul>
-                  <li> <a href="">HOME</a></li>
-                  <li> <a href="">LOG IN </a></li>
-                  <li> <a href="">ASK A QUESTION</a></li>
-                  <li> <a href="">ABOUT US</a></li>
+                  <li class="link"> <a  href="/">HOME</a></li>
+                  <li class="link"> <a href="/log-in">LOG IN </a></li>
+                  <li class="link"> <a href="">ABOUT US</a></li>
+                  <li> <a class="btnQues" href="/askQuestion">ADD QUESTION</a></li>
                 </ul>
                </div>
             </nav>
-
            
-          
-
             <div class="row">
-            
                 <ul>${userList.join("")}</ul>
-            
-             </div>
+            </div>
              
             <script src="./home.js" ></script> 
             </body>
             
             </html>`);
-            //res.sendFile('public/home.html', {root: __dirname })
-     
-        
     });
+  
 
   }
 
-  module.exports ={home}
+  }
+
+
+
+   //login get
+function login(req,res){ 
+  const user = req.user;
+  if(!user)
+  res.sendFile('public/login.html', {root: __dirname })
+  else
+  res.redirect("/");
+
+}
+
+//login post 
+function loginSubmit(req,res){
+  // console.log(req.body.email)
+  const email = req.body.email;
+  const token = jwt.sign({ email }, SECRET);
+  res.cookie("user", token, { maxAge: 600000 });
+  res.redirect('/');
+  
+}
+
+
+function askQuestion(req,res){
+  res.sendFile('public/askQuestion.html', {root: __dirname })
+}
+
+function logout(req,res){
+  res.clearCookie("user");
+  res.redirect("/");
+
+}
+
+function getCookies(req,res){
+console.log(req.user)
+res.send({loggedIn:!!req.user , email:req.user});
+}
+
+function addComment(req,res){
+  db.query("INSERT INTO post_answers (id , text_content, post_id , user_id) VALUES ();")
+  res.redirect("/");
+
+}
+function viewComments(req,res){
+db.query("SELECT * FROM post_answers;")
+.then(res=>{
+  console.log(res.rows)
+  res.send(res.rows);
+})
+.catch(error=>{
+  res.send(error);
+})
+}
+
+function getUser(email) {
+  return  db.query(`SELECT id,username FROM users WHERE email='${email}'`)
+}
+async function addPost(req,res){
+  const data= req.body;
+  let anonymous_flag=0;
+  if(data.anonymous=='on')
+  anonymous_flag=1;
+  // console.log(data);
+  const userEmail=req.user.email;
+  const user = await getUser(userEmail)
+  console.log("from add post cookies " +user.rows[0].username)
+  db.query("INSERT INTO question_posts (user_id, text_title, text_content, anonymous_flag) VALUES($1,$2,$3,$4)", [user.rows[0].id,data.title, data.content,anonymous_flag])
+  .then((result)=>
+  {
+    res.redirect("/")
+  })
+
+
+}
+
+module.exports ={home, login, askQuestion,loginSubmit,logout,getCookies,addComment,viewComments,addPost}

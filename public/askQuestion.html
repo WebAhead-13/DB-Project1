@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="askQuestion.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <div class="postBox">
+        <h1>Ask A Question</h1>
+
+    <form action="addPost" method="POST">
+        <p>Question Title</p>
+        <input type="text" name="title" id="title" placeholder="Enter Title">
+        <p>Question</p> 
+        <textarea name="content" id="content" cols="30" rows="10" placeholder="Enter Content"></textarea>
+        <span> Anonymous Post</span>
+        <label class="switch">
+            <input type="checkbox" id="anonymous" name="anonymous">
+            <span class="slider round"></span>
+          </label>
+
+        <input type="submit">
+    </form>
+</div>
+<script src="askQuestion.js"></script>   
+</body>
+</html>
