@@ -13,6 +13,9 @@ router.get("/getCookies", handlers.getCookies)
 router.post('/addPost',handlers.addPost)
 router.get('/viewComments',handlers.viewComments)
 router.post('/addComment',handlers.addComment)
+router.get('/registration',handlers.registration)
+router.post('/addUser',handlers.addUser)
+
 
 router.use((req, res) => {
     res.status(404).send(`<h1>Not found</h1>`)

@@ -17,9 +17,9 @@ function home(req, res) {
         const userList = data.map((question) => {
            if(question.anonymous_flag == 1)
            {
-             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
+             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> <comments> </comments> </li>`;
            }
-           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
+           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> <comments> </comments> </li>`;
        
         })
 
@@ -64,9 +64,7 @@ function home(req, res) {
             
             </html>`);
       
-      
             //res.sendFile('public/home.html', {root: __dirname })
-      
     });
   }
   else {
@@ -77,9 +75,9 @@ function home(req, res) {
         const userList = data.map((question) => {
            if(question.anonymous_flag == 1)
            {
-             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
+             return `<li class="item">  <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>Anonymous</span> <h3>${question.text_title}</h3>  <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> <comments> </comments> </li>`;
            }
-           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a> </li>`;
+           return `<li class="item"> <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt=""> <span>${question.username}</span> <h3>${question.text_title}</h3> <br> ${question.text_content} <br> <a id=${question.id} class="btn"> add a comment</a>  <comments> </comments> </li>`;
        
         })
         res.status(200).send( `<!DOCTYPE html>
@@ -198,16 +196,23 @@ async function addPost(req,res){
   let anonymous_flag=0;
   if(data.anonymous=='on')
   anonymous_flag=1;
-  // console.log(data);
   const userEmail=req.user.email;
   const user = await getUser(userEmail)
-  // console.log("from add post cookies " +user.rows[0].username)
   db.query("INSERT INTO question_posts (user_id, text_title, text_content, anonymous_flag) VALUES($1,$2,$3,$4)", [user.rows[0].id,data.title, data.content,anonymous_flag])
   .then((result)=>
   {
     res.redirect("/")
   })
-
 }
 
-module.exports ={home, login, askQuestion,loginSubmit,logout,getCookies,addComment,viewComments,addPost}
+function addUser(req,res){
+  const newUser = req.body;
+  console.log(req.body)
+  db.query("INSERT INTO users (username, email ,password, admin_flag) VALUES($1,$2,$3,$4)", [newUser.name, newUser.email, newUser.passsword,0])
+  res.redirect("/")
+
+}
+function registration(req,res){
+  res.sendFile('public/registration.html', {root: __dirname })
+}
+module.exports ={home, login, askQuestion,loginSubmit,logout,getCookies,addComment,viewComments,addPost,addUser,registration}
