@@ -4,6 +4,7 @@ const item = document.querySelectorAll('.item')
 const btn= document.querySelectorAll('.btn');
 const comments= document.querySelectorAll('comments');
 let cookie;
+{/* <i class="fa fa-times" onclick=""></i> */}
 
 itemArray = Array.from(item)
 commentsArray = Array.from(comments)
@@ -44,7 +45,8 @@ fetch('/getCookies')
 })
 .then(data => {
   cookie=data;
-  // console.log("data"+data)
+ 
+
 })
 .catch(error => {
    console.log(error);

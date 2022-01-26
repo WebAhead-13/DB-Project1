@@ -15,6 +15,8 @@ router.get('/viewComments',handlers.viewComments)
 router.post('/addComment',handlers.addComment)
 router.get('/registration',handlers.registration)
 router.post('/addUser',handlers.addUser)
+router.post('/deletePost',handlers.deletePost)
+
 
 
 router.use((req, res) => {

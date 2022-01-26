@@ -49,8 +49,9 @@ function home(req, res) {
                 <ul>
                   <li class="link"> <a  href="/">HOME</a></li>
                   <li class="link"> <a href="/log-out">LOG OUT </a></li>
-                  <li class="link"> <a href="">ABOUT US</a></li>
                   <li> <a class="btnQues" href="/askQuestion">ADD QUESTION</a></li>
+                  <li class="link"> <a href=""> <img class="avatar" src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" alt="">   </a></li>
+
                 </ul>
                </div>
             </nav>
@@ -122,12 +123,9 @@ function home(req, res) {
             </html>`);
     });
   
-
   }
 
   }
-
-
 
    //login get
 function login(req,res){ 
@@ -141,11 +139,23 @@ function login(req,res){
 
 //login post 
 function loginSubmit(req,res){
-  // console.log(req.body.email)
+  // check if the user exists in the database
   const email = req.body.email;
-  const token = jwt.sign({ email }, SECRET);
-  res.cookie("user", token, { maxAge: 600000 });
-  res.redirect('/');
+  const password = req.body.passsword;
+
+  db.query(`SELECT password FROM users WHERE email='${email}'`)
+  .then(({rows})=>{
+    if(rows[0] && ((rows[0]).password) == password) {  //&&rows[0]==password
+      const token = jwt.sign({ email }, SECRET);
+      res.cookie("user", token, { maxAge: 600000 });
+      res.redirect('/');
+    }
+    else {
+      res.redirect('/log-in')
+    }
+  })
+
+
   
 }
 
@@ -161,7 +171,6 @@ function logout(req,res){
 }
 
 function getCookies(req,res){
-// console.log(req.user)
 res.send({loggedIn:!!req.user , email:req.user});
 }
 
@@ -207,12 +216,19 @@ async function addPost(req,res){
 
 function addUser(req,res){
   const newUser = req.body;
-  console.log(req.body)
+  if(newUser.name=='' ||  newUser.email=='' || newUser.passsword==''){
+  res.redirect("/registration")
+  }
+  else {
+  console.log("add user")
   db.query("INSERT INTO users (username, email ,password, admin_flag) VALUES($1,$2,$3,$4)", [newUser.name, newUser.email, newUser.passsword,0])
   res.redirect("/")
-
+  }
 }
 function registration(req,res){
   res.sendFile('public/registration.html', {root: __dirname })
 }
-module.exports ={home, login, askQuestion,loginSubmit,logout,getCookies,addComment,viewComments,addPost,addUser,registration}
+
+function deletePost(req,res){
+}
+module.exports ={home, login, askQuestion,loginSubmit,logout,getCookies,addComment,viewComments,addPost,addUser,registration,deletePost}
